@@ -66,6 +66,7 @@ if __name__ == '__main__':
         sys.exit(5)
 
     cli = None
+    #取进程名称
     me = os.path.basename(sys.argv[0])
 
     try:
@@ -74,21 +75,25 @@ if __name__ == '__main__':
 
         sub = None
         target = me.split('-')
+        #如果进程有版本信息，则移除版本
         if target[-1][0].isdigit():
             # Remove any version or python version info as downstreams
             # sometimes add that
             target = target[:-1]
 
+        #target长度大于1时，sub/myclass取值
         if len(target) > 1:
             sub = target[1]
             myclass = "%sCLI" % sub.capitalize()
         elif target[0] == 'ansible':
+            #ansible时的sub及myclass
             sub = 'adhoc'
             myclass = 'AdHocCLI'
         else:
             raise AnsibleError("Unknown Ansible alias: %s" % me)
 
         try:
+            #加载cli,并取类myclass
             mycli = getattr(__import__("ansible.cli.%s" % sub, fromlist=[myclass]), myclass)
         except ImportError as e:
             # ImportError members have changed in py3
@@ -101,6 +106,7 @@ if __name__ == '__main__':
             else:
                 raise
 
+        #构造~/.ansible目录
         b_ansible_dir = os.path.expanduser(os.path.expandvars(b"~/.ansible"))
         try:
             os.mkdir(b_ansible_dir, 0o700)
@@ -119,6 +125,7 @@ if __name__ == '__main__':
             display.display(u"The full traceback was:\n\n%s" % to_text(traceback.format_exc()))
             exit_code = 6
         else:
+            #实例如mycli,并执行run
             cli = mycli(args)
             exit_code = cli.run()
 
