@@ -80,10 +80,13 @@ class PlaybookCLI(CLI):
         b_playbook_dirs = []
         for playbook in context.CLIARGS['args']:
             if not os.path.exists(playbook):
+                #提供的playbook不存在
                 raise AnsibleError("the playbook: %s could not be found" % playbook)
             if not (os.path.isfile(playbook) or stat.S_ISFIFO(os.stat(playbook).st_mode)):
+                #提供的playbook非文件或者非fifo文件
                 raise AnsibleError("the playbook: %s does not appear to be a file" % playbook)
 
+            #playbook对应的目录名称
             b_playbook_dir = os.path.dirname(os.path.abspath(to_bytes(playbook, errors='surrogate_or_strict')))
             # load plugins from all playbooks in case they add callbacks/inventory/etc
             add_all_plugin_dirs(b_playbook_dir)
