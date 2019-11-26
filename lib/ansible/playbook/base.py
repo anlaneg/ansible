@@ -39,11 +39,13 @@ def _generic_g(prop_name, self):
 
     return value
 
-
+#给定prop_name及self取对应的属性
 def _generic_g_method(prop_name, self):
     try:
         if self._squashed:
+            #取self的属性值
             return self._attributes[prop_name]
+        #调用_get_attr_%s获得
         method = "_get_attr_%s" % prop_name
         return getattr(self, method)()
     except KeyError:
@@ -67,11 +69,11 @@ def _generic_g_parent(prop_name, self):
 
     return value
 
-
+#设置属性
 def _generic_s(prop_name, self, value):
     self._attributes[prop_name] = value
 
-
+#移除属性
 def _generic_d(prop_name, self):
     del self._attributes[prop_name]
 
@@ -92,9 +94,11 @@ class BaseMeta(type):
             getter/setter/deleter methods.
             '''
             keys = list(src_dict.keys())
+            #遍历src_dict中所有的key
             for attr_name in keys:
                 value = src_dict[attr_name]
                 if isinstance(value, Attribute):
+                    #针对attribute类型，名称以'_'开头时，移除掉'_'
                     if attr_name.startswith('_'):
                         attr_name = attr_name[1:]
 
@@ -104,15 +108,19 @@ class BaseMeta(type):
                     # its value from a parent object
                     method = "_get_attr_%s" % attr_name
                     if method in src_dict or method in dst_dict:
+                        #定义attr_name的get函数
                         getter = partial(_generic_g_method, attr_name)
                     elif ('_get_parent_attribute' in dst_dict or '_get_parent_attribute' in src_dict) and value.inherit:
                         getter = partial(_generic_g_parent, attr_name)
                     else:
                         getter = partial(_generic_g, attr_name)
 
+                    #设置属性
                     setter = partial(_generic_s, attr_name)
+                    #移除属性
                     deleter = partial(_generic_d, attr_name)
 
+                    #定义属性attr_name,并提供getter,setter,deleter
                     dst_dict[attr_name] = property(getter, setter, deleter)
                     dst_dict['_valid_attrs'][attr_name] = value
                     dst_dict['_attributes'][attr_name] = Sentinel
@@ -130,9 +138,11 @@ class BaseMeta(type):
             '''
             for parent in parents:
                 if hasattr(parent, '__dict__'):
+                    #更新父类中的属性
                     _create_attrs(parent.__dict__, dst_dict)
                     new_dst_dict = parent.__dict__.copy()
                     new_dst_dict.update(dst_dict)
+                    #递归处理父类的情况
                     _process_parents(parent.__bases__, new_dst_dict)
 
         # create some additional class attributes
@@ -143,6 +153,7 @@ class BaseMeta(type):
 
         # now create the attributes based on the FieldAttributes
         # available, including from parent (and grandparent) objects
+        #收集类中的元属性
         _create_attrs(dct, dct)
         _process_parents(parents, dct)
 
@@ -220,6 +231,7 @@ class FieldAttributeBase(with_metaclass(BaseMeta, object)):
         # something we can more easily parse, and then call the validation
         # function on it to ensure there are no incorrect key values
         ds = self.preprocess_data(ds)
+        #检查是否有非预期的attributes
         self._validate_attributes(ds)
 
         # Walk all attributes in the class. We sort them based on their priority
@@ -230,10 +242,12 @@ class FieldAttributeBase(with_metaclass(BaseMeta, object)):
             if name in self._alias_attrs:
                 target_name = self._alias_attrs[name]
             if name in ds:
+                # 通过_load_%s加载指定属性
                 method = getattr(self, '_load_%s' % name, None)
                 if method:
                     self._attributes[target_name] = method(name, ds[name])
                 else:
+                    # 如果无此method,则直接提取其取值
                     self._attributes[target_name] = ds[name]
 
         # run early, non-critical validation
@@ -269,6 +283,7 @@ class FieldAttributeBase(with_metaclass(BaseMeta, object)):
 
         valid_attrs = frozenset(self._valid_attrs.keys())
         for key in ds:
+            #遇着非预期的attrs
             if key not in valid_attrs:
                 raise AnsibleParserError("'%s' is not a valid attribute for a %s" % (key, self.__class__.__name__), obj=ds)
 

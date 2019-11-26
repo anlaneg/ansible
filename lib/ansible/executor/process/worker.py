@@ -127,6 +127,7 @@ class WorkerProcess(multiprocessing_context.Process):
         to suddenly assume the role and prior state of its parent.
         '''
         try:
+            #调用_run完成运行
             return self._run()
         except BaseException as e:
             self._hard_exit(e)

@@ -835,11 +835,13 @@ def with_metaclass(meta, *bases):
     class metaclass(type):
 
         def __new__(cls, name, this_bases, d):
+            #调用meta类的构造函数，实际化meta
             return meta(name, bases, d)
 
         @classmethod
         def __prepare__(cls, name, this_bases):
             return meta.__prepare__(name, bases)
+    #通过type,动态实例化metaclass
     return type.__new__(metaclass, 'temporary_class', (), {})
 
 

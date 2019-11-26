@@ -53,6 +53,7 @@ class Play(Base, Taggable, CollectionSearch):
     """
 
     # =================================================================================
+    # 定义hosts关键字
     _hosts = FieldAttribute(isa='list', required=True, listof=string_types, always_post_validate=True)
 
     # Facts
@@ -104,6 +105,7 @@ class Play(Base, Taggable, CollectionSearch):
     @staticmethod
     def load(data, variable_manager=None, loader=None, vars=None):
         if ('name' not in data or data['name'] is None) and 'hosts' in data:
+            #name 不在data中，'hosts'在data中
             if data['hosts'] is None or all(host is None for host in data['hosts']):
                 raise AnsibleParserError("Hosts list cannot be empty - please check your playbook")
             if isinstance(data['hosts'], list):
@@ -121,8 +123,10 @@ class Play(Base, Taggable, CollectionSearch):
         '''
 
         if not isinstance(ds, dict):
+            #ds必须为dict类型
             raise AnsibleAssertionError('while preprocessing data (%s), ds should be a dict but was a %s' % (ds, type(ds)))
 
+        # user已变更为'remote_user'
         # The use of 'user' in the Play datastructure was deprecated to
         # line up with the same change for Tasks, due to the fact that
         # 'user' conflicted with the user module.
@@ -130,6 +134,7 @@ class Play(Base, Taggable, CollectionSearch):
             # this should never happen, but error out with a helpful message
             # to the user if it does...
             if 'remote_user' in ds:
+                #user,remote_user不可同时出现
                 raise AnsibleParserError("both 'user' and 'remote_user' are set for %s. "
                                          "The use of 'user' is deprecated, and should be removed" % self.get_name(), obj=ds)
 
@@ -182,6 +187,7 @@ class Play(Base, Taggable, CollectionSearch):
         except AssertionError as e:
             raise AnsibleParserError("A malformed block was encountered while loading handlers", obj=self._ds, orig_exc=e)
 
+    # 设置roles属性
     def _load_roles(self, attr, ds):
         '''
         Loads and returns a list of RoleInclude objects from the datastructure

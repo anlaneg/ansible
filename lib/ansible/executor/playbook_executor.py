@@ -88,6 +88,7 @@ class PlaybookExecutor:
             list(become_loader.all(class_only=True))
 
             for playbook_path in self._playbooks:
+                #加载指定的playbook
                 pb = Playbook.load(playbook_path, variable_manager=self._variable_manager, loader=self._loader)
                 # FIXME: move out of inventory self._inventory.set_playbook_basedir(os.path.realpath(os.path.dirname(playbook_path)))
 

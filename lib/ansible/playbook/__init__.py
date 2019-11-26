@@ -54,6 +54,7 @@ class Playbook:
     def _load_playbook_data(self, file_name, variable_manager, vars=None):
 
         if os.path.isabs(file_name):
+            #绝对路径时，使用目录做为basedir
             self._basedir = os.path.dirname(file_name)
         else:
             self._basedir = os.path.normpath(os.path.join(self._basedir, os.path.dirname(file_name)))
@@ -67,6 +68,7 @@ class Playbook:
         self._file_name = file_name
 
         try:
+            #装载指定的playbook
             ds = self._loader.load_from_file(os.path.basename(file_name))
         except UnicodeDecodeError as e:
             raise AnsibleParserError("Could not read playbook (%s) due to encoding issues: %s" % (file_name, to_native(e)))
@@ -76,22 +78,33 @@ class Playbook:
             self._loader.set_basedir(cur_basedir)
             raise AnsibleParserError("Empty playbook, nothing to do", obj=ds)
         elif not isinstance(ds, list):
+            #playbook必须是一个list类型
             self._loader.set_basedir(cur_basedir)
             raise AnsibleParserError("A playbook must be a list of plays, got a %s instead" % type(ds), obj=ds)
         elif not ds:
+            #playbook不能为空
             display.deprecated("Empty plays will currently be skipped, in the future they will cause a syntax error", version='2.12')
 
         # Parse the playbook entries. For plays, we simply parse them
         # using the Play() object, and includes are parsed using the
         # PlaybookInclude() object
         for entry in ds:
+            #playbook是一个dict的集合
             if not isinstance(entry, dict):
                 # restore the basedir in case this error is caught and handled
                 self._loader.set_basedir(cur_basedir)
                 raise AnsibleParserError("playbook entries must be either a valid play or an include statement", obj=entry)
 
+            #dict集合中包含include,import_playbook样式的key时
+            #例如：
+            #- name: Install neutron server
+            #  include: common-playbooks/neutron.yml
+            #  vars:
+            #    neutron_hosts: "neutron_server"
+            #    neutron_serial: "{{ neutron_server_serial | default('100%') }}"
             if any(action in entry for action in ('import_playbook', 'include')):
                 if 'include' in entry:
+                    #include关键字已不再建议使用
                     display.deprecated("'include' for playbook includes. You should use 'import_playbook' instead", version="2.12")
                 pb = PlaybookInclude.load(entry, basedir=self._basedir, variable_manager=variable_manager, loader=self._loader)
                 if pb is not None:

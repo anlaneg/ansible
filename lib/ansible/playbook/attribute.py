@@ -80,6 +80,7 @@ class Attribute:
         self.isa = isa
         self.private = private
         self.default = default
+        #是否必须属性
         self.required = required
         self.listof = listof
         self.priority = priority

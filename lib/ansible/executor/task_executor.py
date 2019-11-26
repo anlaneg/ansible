@@ -76,6 +76,7 @@ class TaskExecutor:
     SQUASH_ACTIONS = frozenset(C.DEFAULT_SQUASH_ACTIONS)
 
     def __init__(self, host, task, job_vars, play_context, new_stdin, loader, shared_loader_obj, final_q):
+        #主机
         self._host = host
         self._task = task
         self._job_vars = job_vars

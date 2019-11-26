@@ -51,9 +51,11 @@ class RoleInclude(RoleDefinition):
     def load(data, play, current_role_path=None, parent_role=None, variable_manager=None, loader=None, collection_list=None):
 
         if not (isinstance(data, string_types) or isinstance(data, dict) or isinstance(data, AnsibleBaseYAMLObject)):
+            #role必须为string,dict,AnsibleBaseYAMLObject类型
             raise AnsibleParserError("Invalid role definition: %s" % to_native(data))
 
         if isinstance(data, string_types) and ',' in data:
+            #一个role一行
             raise AnsibleError("Invalid old style role requirement: %s" % data)
 
         ri = RoleInclude(play=play, role_basedir=current_role_path, variable_manager=variable_manager, loader=loader, collection_list=collection_list)

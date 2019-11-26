@@ -42,6 +42,7 @@ def load_list_of_blocks(ds, play, parent_block=None, role=None, task_include=Non
     from ansible.playbook.block import Block
 
     if not isinstance(ds, (list, type(None))):
+        #block list必须为list类型
         raise AnsibleAssertionError('%s should be a list or None but is %s' % (ds, type(ds)))
 
     block_list = []
@@ -383,9 +384,11 @@ def load_list_of_roles(ds, play, current_role_path=None, variable_manager=None, 
     from ansible.playbook.role.include import RoleInclude
 
     if not isinstance(ds, list):
+        # roles必须为list类型
         raise AnsibleAssertionError('ds (%s) should be a list but was a %s' % (ds, type(ds)))
 
     roles = []
+    #遍历所有role,逐个进行加载
     for role_def in ds:
         i = RoleInclude.load(role_def, play=play, current_role_path=current_role_path, variable_manager=variable_manager,
                              loader=loader, collection_list=collection_search_list)

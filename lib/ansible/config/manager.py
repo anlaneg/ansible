@@ -169,6 +169,7 @@ def resolve_path(path, basedir=None):
 
 
 # FIXME: generic file type?
+#取配置文件类型
 def get_config_type(cfile):
 
     ftype = None
@@ -196,6 +197,7 @@ def get_ini_config_value(p, entry):
     return value
 
 
+#确定ansible.cfg文件位置
 def find_ini_config_file(warnings=None):
     ''' Load INI Config File order(first found is used): ENV, CWD, HOME, /etc/ansible '''
     # FIXME: eventually deprecate ini configs
@@ -213,6 +215,7 @@ def find_ini_config_file(warnings=None):
     # Environment setting
     path_from_env = os.getenv("ANSIBLE_CONFIG", SENTINEL)
     if path_from_env is not SENTINEL:
+        #查找ansible.cfg
         path_from_env = unfrackpath(path_from_env, follow=False)
         if os.path.isdir(to_bytes(path_from_env)):
             path_from_env = os.path.join(path_from_env, "ansible.cfg")
@@ -221,6 +224,7 @@ def find_ini_config_file(warnings=None):
     # Current working directory
     warn_cmd_public = False
     try:
+        #自当前wd位置查找ansible.cfg
         cwd = os.getcwd()
         perms = os.stat(cwd)
         cwd_cfg = os.path.join(cwd, "ansible.cfg")
@@ -241,6 +245,7 @@ def find_ini_config_file(warnings=None):
     # System location
     potential_paths.append("/etc/ansible/ansible.cfg")
 
+    #只要有一个ansible.cfg文件存在，则break
     for path in potential_paths:
         b_path = to_bytes(path)
         if os.path.exists(b_path) and os.access(b_path, os.R_OK):
@@ -272,16 +277,20 @@ class ConfigManager(object):
         self._plugins = {}
         self._parsers = {}
 
+        #配置文件名称
         self._config_file = conf_file
         self.data = ConfigData()
 
+        #如果给定了default配置文件，则加载，如款给定，则加载./base.yml
         self._base_defs = self._read_config_yaml_file(defs_file or ('%s/base.yml' % os.path.dirname(__file__)))
 
         if self._config_file is None:
+            #未指定配置文件，尝试查找ansible.cfg文件
             # set config using ini
             self._config_file = find_ini_config_file(self.WARNINGS)
 
         # consume configuration
+        # 找到了配置文件，解析配置文件
         if self._config_file:
             # initialize parser and read config
             self._parse_config_file()
@@ -301,20 +310,24 @@ class ConfigManager(object):
         yml_file = to_bytes(yml_file)
         if os.path.exists(yml_file):
             with open(yml_file, 'rb') as config_def:
+                #加载yaml配置
                 return yaml_load(config_def, Loader=SafeLoader) or {}
         raise AnsibleError(
             "Missing base YAML definition file (bad install?): %s" % to_native(yml_file))
 
+    #ansible配置文件解析
     def _parse_config_file(self, cfile=None):
         ''' return flat configuration settings from file(s) '''
         # TODO: take list of files with merge/nomerge
 
         if cfile is None:
+            #未指定配置文件，使用找到的config_file
             cfile = self._config_file
 
         ftype = get_config_type(cfile)
         if cfile is not None:
             if ftype == 'ini':
+                #目前仅支持ini格式
                 self._parsers[cfile] = configparser.ConfigParser()
                 with open(to_bytes(cfile), 'rb') as f:
                     try:
@@ -521,9 +534,12 @@ class ConfigManager(object):
         self._plugins[plugin_type][name] = defs
 
     def update_module_defaults_groups(self):
+        #取模块defaults.yml配置
         defaults_config = self._read_config_yaml_file(
             '%s/module_defaults.yml' % os.path.join(os.path.dirname(__file__))
         )
+        
+        #版本检查
         if defaults_config.get('version') not in ('1', '1.0', 1, 1.0):
             raise AnsibleError('module_defaults.yml has an invalid version "%s" for configuration. Could be a bad install.' % defaults_config.get('version'))
         self.module_defaults_groups = defaults_config.get('groupings', {})
@@ -541,6 +557,7 @@ class ConfigManager(object):
             raise AnsibleOptionsError("Invalid configuration definition type: %s for %s" % (type(defs), defs))
 
         # update the constant for config file
+        # 记录配置文件路径
         self.data.update_setting(Setting('CONFIG_FILE', configfile, '', 'string'))
 
         origin = None
