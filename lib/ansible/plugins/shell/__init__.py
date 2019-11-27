@@ -51,9 +51,11 @@ class ShellBase(AnsiblePlugin):
         # Make sure all system_tmpdirs are absolute otherwise they'd be relative to the login dir
         # which is almost certainly going to fail in a cornercase.
         if not all(os.path.isabs(d) for d in normalized_paths):
+            #有一个或多个路径是不存在的，报错
             raise AnsibleError('The configured system_tmpdirs contains a relative path: {0}. All'
                                ' system_tmpdirs must be absolute'.format(to_native(normalized_paths)))
 
+        #设置临时目录
         self.set_option('system_tmpdirs', normalized_paths)
 
     def set_options(self, task_keys=None, var_options=None, direct=None):
@@ -88,9 +90,11 @@ class ShellBase(AnsiblePlugin):
         return base_name.strip()
 
     def path_has_trailing_slash(self, path):
+        #路径是否以'/'结尾
         return path.endswith('/')
 
     def chmod(self, paths, mode):
+        #构造chmod命令
         cmd = ['chmod', mode]
         cmd.extend(paths)
         cmd = [shlex_quote(c) for c in cmd]
@@ -98,6 +102,7 @@ class ShellBase(AnsiblePlugin):
         return ' '.join(cmd)
 
     def chown(self, paths, user):
+        #构造chown命令
         cmd = ['chown', user]
         cmd.extend(paths)
         cmd = [shlex_quote(c) for c in cmd]
@@ -113,6 +118,7 @@ class ShellBase(AnsiblePlugin):
         return ' '.join(cmd)
 
     def remove(self, path, recurse=False):
+        #构造rm命令
         path = shlex_quote(path)
         cmd = 'rm -f '
         if recurse:
@@ -120,6 +126,7 @@ class ShellBase(AnsiblePlugin):
         return cmd + "%s %s" % (path, self._SHELL_REDIRECT_ALLNULL)
 
     def exists(self, path):
+        #构造文件是否存在命令
         cmd = ['test', '-e', shlex_quote(path)]
         return ' '.join(cmd)
 
@@ -163,6 +170,7 @@ class ShellBase(AnsiblePlugin):
         return cmd
 
     def expand_user(self, user_home_path, username=''):
+        #展开~符号
         ''' Return a command to expand tildes in a path
 
         It can be either "~" or "~username". We just ignore $HOME
@@ -185,6 +193,7 @@ class ShellBase(AnsiblePlugin):
         return 'echo %s' % user_home_path
 
     def pwd(self):
+        #构造获取当前路径命令
         """Return the working directory after connecting"""
         return 'echo %spwd%s' % (self._SHELL_SUB_LEFT, self._SHELL_SUB_RIGHT)
 

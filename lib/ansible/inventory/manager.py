@@ -151,6 +151,7 @@ class InventoryManager(object):
         self._pattern_cache = {}  # resolved individual patterns
 
         # the inventory dirs, files, script paths or lists of hosts
+        #填充sources,并解析这些sources
         if sources is None:
             self._sources = []
         elif isinstance(sources, string_types):
@@ -216,6 +217,7 @@ class InventoryManager(object):
 
             if source:
                 if ',' not in source:
+                    #将source解变量，变更为真实地址
                     source = unfrackpath(source, follow=False)
                 parse = self.parse_source(source, cache=cache)
                 if parse and not parsed:
@@ -250,6 +252,7 @@ class InventoryManager(object):
                     continue
 
                 # recursively deal with directory entries
+                #进子目录，取全路径，进行parse
                 fullpath = to_text(os.path.join(b_source, i), errors='surrogate_or_strict')
                 parsed_this_one = self.parse_source(fullpath, cache=cache)
                 display.debug(u'parsed %s as %s' % (fullpath, parsed_this_one))
@@ -277,6 +280,7 @@ class InventoryManager(object):
                 if plugin_wants:
                     try:
                         # FIXME in case plugin fails 1/2 way we have partial inventory
+                        # 由插件来解析文件
                         plugin.parse(self._inventory, self._loader, source, cache=cache)
                         try:
                             plugin.update_cache_if_changed()

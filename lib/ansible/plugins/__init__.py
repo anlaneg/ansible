@@ -44,6 +44,7 @@ def get_plugin_class(obj):
         return obj.__class__.__name__.lower().replace('module', '')
 
 
+#定义ansible的plugin基类
 class AnsiblePlugin(with_metaclass(ABCMeta, object)):
 
     # allow extra passthrough parameters
@@ -54,6 +55,7 @@ class AnsiblePlugin(with_metaclass(ABCMeta, object)):
 
     def get_option(self, option, hostvars=None):
         if option not in self._options:
+            #option不存在，则尝试自配置中加载，并返回
             try:
                 option_value = C.config.get_config_value(option, plugin_type=get_plugin_class(self), plugin_name=self._load_name, variables=hostvars)
             except AnsibleError as e:
@@ -62,6 +64,7 @@ class AnsiblePlugin(with_metaclass(ABCMeta, object)):
         return self._options.get(option)
 
     def set_option(self, option, value):
+        #设置option及其对应的value
         self._options[option] = value
 
     def set_options(self, task_keys=None, var_options=None, direct=None):

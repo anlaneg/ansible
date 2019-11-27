@@ -42,6 +42,7 @@ display = Display()
 
 
 def get_all_plugin_loaders():
+    #返回本文件中定义的所有PluginLoader类型变量
     return [(name, obj) for (name, obj) in globals().items() if isinstance(obj, PluginLoader)]
 
 
@@ -51,6 +52,7 @@ def add_all_plugin_dirs(path):
     if os.path.isdir(b_path):
         for name, obj in get_all_plugin_loaders():
             if obj.subdir:
+                #收集plgin_loaders对应的子目录
                 plugin_path = os.path.join(b_path, to_bytes(obj.subdir))
                 if os.path.isdir(plugin_path):
                     obj.add_directory(to_text(plugin_path))
@@ -109,9 +111,12 @@ class PluginLoader:
     def __init__(self, class_name, package, config, subdir, aliases=None, required_base_class=None):
         aliases = {} if aliases is None else aliases
 
+        #插件类名称
         self.class_name = class_name
         self.base_class = required_base_class
+        #插件包名称
         self.package = package
+        #指定子目录
         self.subdir = subdir
 
         # FIXME: remove alias dict in favor of alias by symlink?
@@ -302,6 +307,7 @@ class PluginLoader:
                     C.config.initialize_plugin_configuration_definitions(type_name, name, dstring['options'])
                     display.debug('Loaded config def from plugin (%s/%s)' % (type_name, name))
 
+    #添加search附加目录
     def add_directory(self, directory, with_subdir=False):
         ''' Adds an additional directory to the search path '''
 
@@ -373,6 +379,7 @@ class PluginLoader:
 
         global _PLUGIN_FILTERS
         if name in _PLUGIN_FILTERS[self.package]:
+            #在filters的插件将被忽略
             return None, None
 
         if mod_type:
@@ -867,9 +874,9 @@ connection_loader = PluginLoader(
 shell_loader = PluginLoader(
     'ShellModule',
     'ansible.plugins.shell',
-    'shell_plugins',
-    'shell_plugins',
-)
+    'shell_plugins',0 
+    'shell_plugins', 
+) 
 
 module_loader = PluginLoader(
     '',

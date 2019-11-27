@@ -27,7 +27,7 @@ from ansible.module_utils._text import to_bytes, to_native, to_text
 
 __all__ = ['unfrackpath', 'makedirs_safe']
 
-
+#解析为真实地址
 def unfrackpath(path, follow=True, basedir=None):
     '''
     Returns a path that is free of symlinks (if follow=True), environment variables, relative path traversals and symbols (~)
@@ -47,16 +47,20 @@ def unfrackpath(path, follow=True, basedir=None):
     b_basedir = to_bytes(basedir, errors='surrogate_or_strict', nonstring='passthru')
 
     if b_basedir is None:
+        #取当前工作目录为basedir
         b_basedir = to_bytes(os.getcwd(), errors='surrogate_or_strict')
     elif os.path.isfile(b_basedir):
+        #如basedir为文件，则取其所属目录
         b_basedir = os.path.dirname(b_basedir)
 
     b_final_path = os.path.expanduser(os.path.expandvars(to_bytes(path, errors='surrogate_or_strict')))
 
     if not os.path.isabs(b_final_path):
+        #为相对路径，合为绝对路径
         b_final_path = os.path.join(b_basedir, b_final_path)
 
     if follow:
+        #如果为link,则获取到真实地址
         b_final_path = os.path.realpath(b_final_path)
 
     return to_text(os.path.normpath(b_final_path), errors='surrogate_or_strict')
