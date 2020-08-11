@@ -31,10 +31,16 @@ from ..util_common import (
 
 from ..ansible_util import (
     ansible_environment,
+    get_collection_detail,
+    CollectionDetailError,
 )
 
 from ..config import (
     SanityConfig,
+)
+
+from ..ci import (
+    get_ci_provider,
 )
 
 from ..data import (
@@ -44,6 +50,13 @@ from ..data import (
 
 class ValidateModulesTest(SanitySingleVersion):
     """Sanity test using validate-modules."""
+
+    def __init__(self):
+        super(ValidateModulesTest, self).__init__()
+        self.optional_error_codes.update([
+            'deprecated-date',
+        ])
+
     @property
     def error_code(self):  # type: () -> t.Optional[str]
         """Error code for ansible-test matching the format used by the underlying test program, or None if the program does not use error codes."""
@@ -60,21 +73,16 @@ class ValidateModulesTest(SanitySingleVersion):
         :type python_version: str
         :rtype: TestResult
         """
-        if data_context().content.is_ansible:
-            ignore_codes = ()
-        else:
-            ignore_codes = ((
-                'E502',  # only ansible content requires __init__.py for module subdirectories
-            ))
-
         env = ansible_environment(args, color=False)
 
         settings = self.load_processor(args)
 
         paths = [target.path for target in targets.include]
 
+        python = find_python(python_version)
+
         cmd = [
-            find_python(python_version),
+            python,
             os.path.join(SANITY_ROOT, 'validate-modules', 'validate-modules'),
             '--format', 'json',
             '--arg-spec',
@@ -82,13 +90,25 @@ class ValidateModulesTest(SanitySingleVersion):
 
         if data_context().content.collection:
             cmd.extend(['--collection', data_context().content.collection.directory])
+
+            try:
+                collection_detail = get_collection_detail(args, python)
+
+                if collection_detail.version:
+                    cmd.extend(['--collection-version', collection_detail.version])
+                else:
+                    display.warning('Skipping validate-modules collection version checks since no collection version was found.')
+            except CollectionDetailError as ex:
+                display.warning('Skipping validate-modules collection version checks since collection detail loading failed: %s' % ex.reason)
         else:
-            if args.base_branch:
+            base_branch = args.base_branch or get_ci_provider().get_base_branch()
+
+            if base_branch:
                 cmd.extend([
-                    '--base-branch', args.base_branch,
+                    '--base-branch', base_branch,
                 ])
             else:
-                display.warning('Cannot perform module comparison against the base branch. Base branch not detected when running locally.')
+                display.warning('Cannot perform module comparison against the base branch because the base branch was not detected.')
 
         try:
             stdout, stderr = run_command(args, cmd, env=env, capture=True)
@@ -121,7 +141,6 @@ class ValidateModulesTest(SanitySingleVersion):
                     message=item['msg'],
                 ))
 
-        errors = [error for error in errors if error.code not in ignore_codes]
         errors = settings.process_errors(errors, paths)
 
         if errors:

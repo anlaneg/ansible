@@ -83,7 +83,8 @@ class Playbook:
             raise AnsibleParserError("A playbook must be a list of plays, got a %s instead" % type(ds), obj=ds)
         elif not ds:
             #playbook不能为空
-            display.deprecated("Empty plays will currently be skipped, in the future they will cause a syntax error", version='2.12')
+            display.deprecated("Empty plays will currently be skipped, in the future they will cause a syntax error",
+                               version='2.12', collection_name='ansible.builtin')
 
         # Parse the playbook entries. For plays, we simply parse them
         # using the Play() object, and includes are parsed using the
@@ -105,7 +106,8 @@ class Playbook:
             if any(action in entry for action in ('import_playbook', 'include')):
                 if 'include' in entry:
                     #include关键字已不再建议使用
-                    display.deprecated("'include' for playbook includes. You should use 'import_playbook' instead", version="2.12")
+                    display.deprecated("'include' for playbook includes. You should use 'import_playbook' instead",
+                                       version="2.12", collection_name='ansible.builtin')
                 pb = PlaybookInclude.load(entry, basedir=self._basedir, variable_manager=variable_manager, loader=self._loader)
                 if pb is not None:
                     self._entries.extend(pb._entries)

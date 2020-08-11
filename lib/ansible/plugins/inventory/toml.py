@@ -4,11 +4,7 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'core'}
-
-DOCUMENTATION = '''
+DOCUMENTATION = r'''
     inventory: toml
     version_added: "2.8"
     short_description: Uses a specific TOML file as an inventory source.
@@ -19,7 +15,8 @@ DOCUMENTATION = '''
         - Requires the 'toml' python library
 '''
 
-EXAMPLES = '''
+EXAMPLES = r'''
+# Following are examples of 3 different inventories in TOML format
 example1: |
     [all.vars]
     has_java = false
@@ -109,11 +106,6 @@ except ImportError:
     HAS_TOML = False
 
 display = Display()
-
-WARNING_MSG = (
-    'The TOML inventory format is marked as preview, which means that it is not guaranteed to have a backwards '
-    'compatible interface.'
-)
 
 
 if HAS_TOML and hasattr(toml, 'TomlEncoder'):
@@ -235,8 +227,6 @@ class InventoryModule(BaseFileInventoryPlugin):
             raise AnsibleParserError(
                 'The TOML inventory plugin requires the python "toml" library'
             )
-
-        display.warning(WARNING_MSG)
 
         super(InventoryModule, self).parse(inventory, loader, path)
         self.set_options()
