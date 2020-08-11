@@ -219,6 +219,7 @@ class InventoryManager(object):
                 if ',' not in source:
                     #将source解变量，变更为真实地址
                     source = unfrackpath(source, follow=False)
+                #解释source文件
                 parse = self.parse_source(source, cache=cache)
                 if parse and not parsed:
                     parsed = True
@@ -243,6 +244,7 @@ class InventoryManager(object):
 
         # process directories as a collection of inventories
         if os.path.isdir(b_source):
+            #如果b_source是目录，则遍历其下所有文件
             display.debug(u'Searching for inventory files in directory: %s' % source)
             for i in sorted(os.listdir(b_source)):
 

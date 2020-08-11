@@ -91,6 +91,7 @@ class AdHocCLI(CLI):
         becomepass = None
 
         (sshpass, becomepass) = self.ask_passwords()
+        #记录连接的password,及切换用户时的password
         passwords = {'conn_pass': sshpass, 'become_pass': becomepass}
 
         # get basic objects

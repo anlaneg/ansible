@@ -238,6 +238,7 @@ class CLI(with_metaclass(ABCMeta, object)):
 
         try:
             if op['ask_pass']:
+                #显示提示符，要求用户输入ssh的password
                 sshpass = getpass.getpass(prompt="SSH password: ")
                 become_prompt = "%s password[defaults to SSH password]: " % become_prompt_method
             else:
@@ -466,6 +467,7 @@ class CLI(with_metaclass(ABCMeta, object)):
         loader.set_vault_secrets(vault_secrets)
 
         # create the inventory, and filter it based on the subset specified (if any)
+        # 取options中的inventory做为sources
         inventory = InventoryManager(loader=loader, sources=options['inventory'])
 
         # create the variable manager, which will be shared throughout
